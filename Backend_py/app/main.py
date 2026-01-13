@@ -12,7 +12,7 @@ r = redis.Redis(host=redis_host, port=6379, db=0, decode_responses=True)
 
 # 3. Routes (Notice we use @router.get instead of @app.get)
 
-@router.get("/fetch/{product_id}")
+@router.get("/{product_id}")
 def db_fetch(product_id: int):
     key = f"product:{product_id}"
     cache_ = r.get(key)
@@ -68,7 +68,7 @@ def update_product(product: Product):
     finally:
         db.close()
 
-@router.delete("/delete/{prod_id}")
+@router.delete("/{prod_id}")
 def delete_product(prod_id: int):
     db = DatabaseConn()
     try:
@@ -87,4 +87,5 @@ def delete_product(prod_id: int):
 
 @router.get("/all")
 def fetch_all():
+    
     return [{"message": "Fetch all not implemented in DB class yet"}]
