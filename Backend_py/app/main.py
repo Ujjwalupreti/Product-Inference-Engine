@@ -87,5 +87,4 @@ def delete_product(prod_id: int):
 
 @router.get("/all")
 def fetch_all():
-    # Placeholder for logic to fetch all products
     return [{"message": "Fetch all not implemented in DB class yet"}]
