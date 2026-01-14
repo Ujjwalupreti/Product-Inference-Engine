@@ -48,8 +48,6 @@ class AuthHandler:
             username: str = payload.get("sub")
             if username is None:
                 raise credentials_exception
-            
-            # In a real app, you might fetch the full user object from DB here
             return {"username": username, "id": payload.get("id")}
             
         except JWTError:

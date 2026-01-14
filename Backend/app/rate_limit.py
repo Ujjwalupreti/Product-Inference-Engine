@@ -21,5 +21,5 @@ async def rate_limit(request: Request):
     pipe = r.pipeline()
     pipe.incr(key)
     if not request_count:
-        pipe.expire(key, 60) # Expire in 60 seconds
+        pipe.expire(key, 60)
     pipe.execute()

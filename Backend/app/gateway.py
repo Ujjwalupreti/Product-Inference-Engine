@@ -1,17 +1,13 @@
-# /app/gateway.py
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 
-# Import your modules
 from .auth import AuthHandler
 from .rate_limit import rate_limit
-# Import the Router from main.py
 from .main import router as product_router 
 
 app = FastAPI(title="Production Gateway")
 
-# 1. Global Middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -19,7 +15,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 2. Login Route (Public)
 @app.post("/token")
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     if form_data.password != "secret":

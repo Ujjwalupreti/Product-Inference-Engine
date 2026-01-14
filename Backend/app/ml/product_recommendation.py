@@ -13,10 +13,6 @@ class AdvancedRecommender:
         self.feature_matrix = None
         
     def build_pipeline(self):
-        """
-        Constructs the Sklearn Pipeline with Feature Union.
-        This combines NLP features (TF-IDF) with Numerical features (Price).
-        """
         # A. NLP Pipeline for 'desp'
         text_pipeline = Pipeline([
             ('cleaner', TextCleaner()), # Our custom class
@@ -100,8 +96,6 @@ class AdvancedRecommender:
 if __name__ == "__main__":
     rec_engine = AdvancedRecommender()
     rec_engine.fit()
-    
-    # Test for ID 1 (Wireless Mouse)
     print("\n--- Recommendations for Product ID 1 (Wireless Mouse) ---")
     recs = rec_engine.recommend(1)
     for r in recs:

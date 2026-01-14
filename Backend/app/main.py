@@ -1,16 +1,11 @@
-# /app/main.py
 from fastapi import APIRouter, HTTPException
 import redis, json, os
 from .db import DatabaseConn, Product
 
-# 1. Change FastAPI() to APIRouter()
 router = APIRouter()
 
-# 2. Redis Connection (Specific for Product caching)
 redis_host = os.getenv('REDIS_HOST', 'localhost')
 r = redis.Redis(host=redis_host, port=6379, db=0, decode_responses=True)
-
-# 3. Routes (Notice we use @router.get instead of @app.get)
 
 @router.get("/{product_id}")
 def db_fetch(product_id: int):
@@ -32,7 +27,6 @@ def db_fetch(product_id: int):
         data["Hit"] = False
         return data 
     except Exception as e:
-        # Note: In production, careful with creating tables on error
         db.create_table() 
         raise HTTPException(status_code=500, detail=str(e))
     finally:
@@ -84,8 +78,3 @@ def delete_product(prod_id: int):
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         db.close()
-
-@router.get("/all")
-def fetch_all():
-    
-    return [{"message": "Fetch all not implemented in DB class yet"}]

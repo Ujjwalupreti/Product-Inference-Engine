@@ -25,7 +25,6 @@ db_config = {
 
 class DatabaseConn:
     def __init__(self):
-        # ... your db_config ...
         self.conn = mysql.connector.connect(**db_config)
         self.cursor = self.conn.cursor(dictionary=True)
 
