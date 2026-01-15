@@ -5,7 +5,7 @@ from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 import os
-from db import MongoDB
+from .db import mongo
 
 SECRET_KEY = os.getenv("SECRET_KEY","123456789")
 ALGORITHM = "HS256"
@@ -49,7 +49,7 @@ class AuthHandler:
             username: str = payload.get("sub")
             if username is None:
                 raise credentials_exception
-            user = await MongoDB.db["users"].find_one({"username":username})
+            user = await mongo.db["users"].find_one({"username":username})
             if user is None:
                 return credentials_exception
             return {"username": user["username"], "id": str(user["_id"])}

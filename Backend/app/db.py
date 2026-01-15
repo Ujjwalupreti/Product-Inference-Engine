@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field, BeforeValidator, EmailStr
 from typing import Optional
 from typing_extensions import Annotated
 import os
-from motor.motor_asyncio import AsyncIOMotoClient
+from motor.motor_asyncio import AsyncIOMotorClient
 
 MONGO_URI = os.getenv("MONGO_URI","mongodb://localhost:27017")
 DB_NAME = "Ecomm_user"
@@ -42,11 +42,11 @@ db_config = {
 }
 
 class MongoDB:
-    client: AsyncIOMotoClient = None
+    client: AsyncIOMotorClient = None
     db = None
     
     def connect(self):
-        self.client = AsyncIOMotoClient(
+        self.client = AsyncIOMotorClient(
             MONGO_URI,
             maxPoolSize = 10,
             minPoolSize = 1,
@@ -58,6 +58,8 @@ class MongoDB:
         if self.client:
             self.client.close()
             print("Closed Mongodb Connection")    
+
+mongo = MongoDB()            
 
 class DatabaseConn:
     def __init__(self):
