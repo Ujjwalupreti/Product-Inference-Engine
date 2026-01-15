@@ -5,6 +5,7 @@ from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 import os
+from db import MongoDB
 
 SECRET_KEY = os.getenv("SECRET_KEY","123456789")
 ALGORITHM = "HS256"
@@ -37,7 +38,7 @@ class AuthHandler:
         return encoded_jwt
     
     @staticmethod
-    def get_current_user(token:str = Depends(outh2_schema)):
+    async def get_current_user(token:str = Depends(outh2_schema)):
         credentials_exception = HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
@@ -48,7 +49,10 @@ class AuthHandler:
             username: str = payload.get("sub")
             if username is None:
                 raise credentials_exception
-            return {"username": username, "id": payload.get("id")}
+            user = await MongoDB.db["users"].find_one({"username":username})
+            if user is None:
+                return credentials_exception
+            return {"username": user["username"], "id": str(user["_id"])}
             
         except JWTError:
             raise credentials_exception  

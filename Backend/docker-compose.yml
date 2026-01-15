@@ -2,6 +2,14 @@ version: '3.8'
 
 services:
   # --- 1. Database Service ---
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb_container
+    restart: always
+    volumes:
+      - mongo_data:/data/db
+      
   db:
     image: mysql:8.0
     restart: always

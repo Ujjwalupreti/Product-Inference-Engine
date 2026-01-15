@@ -5,8 +5,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from .auth import AuthHandler
 from .rate_limit import rate_limit
 from .main import router as product_router 
+from .db import MongoDB, User, Signup, Token
 
 app = FastAPI(title="Production Gateway")
+
+@app.on_event("startup")
+async def startup_db():
+    MongoDB.connect()
+    
+@app.on_event("shutdown")
+async def shutdown_db():
+    MongoDB.close()    
 
 app.add_middleware(
     CORSMiddleware,
@@ -15,14 +24,36 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.post("/signup")
+async def signup(user:Signup):
+    existing_user = await MongoDB.db["users"].find_one({"username":user.username})
+    if existing_user:
+        raise HTTPException(status_code=400,detail = "Username already Taken")
+    
+    hashed_pwd = AuthHandler.get_password_hash(user.password)
+    
+    user_doc = User(
+        username=user.username,
+        email = user.email,
+        hashed_password=hashed_pwd
+    )
+    
+    await MongoDB.db["users"].insert_one(
+        user_doc.model_dump(by_alias=True, exclude = ["id"])
+    )
+    
+    return {"message":"User created successfully"}
+
 @app.post("/token")
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    if form_data.password != "secret":
-        raise HTTPException(status_code=400, detail="Incorrect password")
+    user = await MongoDB.db["users"].find_one({"username": form_data.username})
+    if not user:
+        raise HTTPException(status_code=400, detail="Incorrect username or password")
     
-    access_token = AuthHandler.create_access_token(
-        data={"sub": form_data.username}
-    )
+    if not AuthHandler.verify_method(form_data.password, user["hashed_password"]):
+        raise HTTPException(status_code=400, detail="Incorrect username or password")
+    
+    access_token = AuthHandler.create_access_token(data={"sub": user["username"]})
     return {"access_token": access_token, "token_type": "bearer"}
 
 @app.get("/health")

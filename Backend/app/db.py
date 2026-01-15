@@ -1,11 +1,21 @@
 import urllib.parse
 import mysql.connector
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, BeforeValidator, EmailStr
 from typing import Optional
+from typing_extensions import Annotated
 import os
+from motor.motor_asyncio import AsyncIOMotoClient
+
+MONGO_URI = os.getenv("MONGO_URI","mongodb://localhost:27017")
+DB_NAME = "Ecomm_user"
+
+PyObjectId = Annotated[str, BeforeValidator(str)]    
 class User(BaseModel):
-    id: int
-    name: str
+    id : Optional[PyObjectId] = Field(alias="_id",default=None)    
+    username: str
+    email:EmailStr
+    hashed_password:str
+    role: str = "user"
 
 class Product(BaseModel):
     id:int
@@ -14,7 +24,15 @@ class Product(BaseModel):
     price:int
     quantity:int
     total:Optional[float] = None
+    
+class Signup(BaseModel):
+    username: str
+    email: EmailStr
+    password: str
 
+class Token(BaseModel):
+    access_token: str
+    token_type: str
 
 db_config = {
     'user': 'root',
@@ -22,6 +40,24 @@ db_config = {
     'host': os.getenv('DB_HOST', 'localhost'),
     'database':'Test1'
 }
+
+class MongoDB:
+    client: AsyncIOMotoClient = None
+    db = None
+    
+    def connect(self):
+        self.client = AsyncIOMotoClient(
+            MONGO_URI,
+            maxPoolSize = 10,
+            minPoolSize = 1,
+            serverSelectionTimeoutMS=5000)
+        self.db = self.client[DB_NAME]
+        print("Connected to MongoDB(User Store)")
+        
+    def close(self):
+        if self.client:
+            self.client.close()
+            print("Closed Mongodb Connection")    
 
 class DatabaseConn:
     def __init__(self):
