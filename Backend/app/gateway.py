@@ -64,5 +64,5 @@ app.include_router(
     product_router,
     prefix="/product",
     tags=["Products"],
-    dependencies=[Depends(rate_limit), Depends(AuthHandler.get_current_user)]
+    dependencies=[Depends(rate_limit)]
 )

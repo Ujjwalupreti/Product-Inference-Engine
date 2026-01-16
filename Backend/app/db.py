@@ -36,9 +36,9 @@ class Token(BaseModel):
 
 db_config = {
     'user': 'root',
-    'password':'Ujjwalsql@2500',
+    'password': os.getenv('DB_PASSWORD', 'Ujjwalsql@2500'),
     'host': os.getenv('DB_HOST', 'localhost'),
-    'database':'Test1'
+    'database': 'Test1'
 }
 
 class MongoDB:
