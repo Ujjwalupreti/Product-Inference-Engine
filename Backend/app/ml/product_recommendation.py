@@ -4,6 +4,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.neighbors import NearestNeighbors
 from .dataCleaner import TextCleaner,load_enhanced_dataset
+import threading
 
 class AdvancedRecommender:
     def __init__(self):
@@ -11,6 +12,7 @@ class AdvancedRecommender:
         self.pipeline = None
         self.model = None
         self.feature_matrix = None
+        self._lock = threading.Lock()
         
     def build_pipeline(self):
         # A. NLP Pipeline for 'desp'
@@ -29,7 +31,7 @@ class AdvancedRecommender:
         # Applies text_pipeline to 'desp' and num_pipeline to 'prices'
         self.pipeline = ColumnTransformer([
             ('nlp_features', text_pipeline, 'desp'),
-            ('num_features', num_pipeline, ['prices'])
+            ('num_features', num_pipeline, ['price'])
         ])
         
         # D. The Estimator (Model)
@@ -37,28 +39,25 @@ class AdvancedRecommender:
         self.model = NearestNeighbors(n_neighbors=5, metric='cosine', algorithm='brute')
 
     def fit(self):
-        """Loads data, transforms features, and fits the model."""
-        # 1. Load Data
-        self.df = load_enhanced_dataset()
-        print(f"✅ Loaded {len(self.df)} products (after augmentation)")
-        
-        # 2. Build Pipeline
-        self.build_pipeline()
-        
-        # 3. Run the Pipeline (Feature Extraction)
-        # This converts our raw dataframe into a numeric matrix
-        self.feature_matrix = self.pipeline.fit_transform(self.df)
-        print("✅ Feature Extraction Complete (Text + Price normalized)")
-        
-        # 4. Train the Model
-        self.model.fit(self.feature_matrix)
-        print("✅ KNN Model Trained")
+        with self._lock:
+            # 1. Load Data
+            self.df = load_enhanced_dataset()
+            print(f"Loaded {len(self.df)} products (after augmentation)")
+
+            # 2. Build Pipeline
+            self.build_pipeline()
+
+            # 3. Run the Pipeline (Feature Extraction)
+            # This converts our raw dataframe into a numeric matrix
+            self.feature_matrix = self.pipeline.fit_transform(self.df)
+            print("Feature Extraction Complete (Text + Price normalized)")
+
+            # 4. Train the Model
+            self.model.fit(self.feature_matrix)
+            print("KNN Model Trained")
 
     def recommend(self, product_id: int, n_recommendations: int = 3):
-        """
-        Predicts nearest neighbors for a given product ID.
-        """
-        if self.df is None:
+        if self.df is None or self.model is None:
             raise Exception("Model not trained. Call .fit() first.")
             
         # 1. Locate the product in our dataframe
@@ -78,7 +77,7 @@ class AdvancedRecommender:
         
         # 4. Format Results
         results = []
-        for i in range(1, len(indices[0])): # Skip index 0 (it's the product itself)
+        for i in range(1, len(indices[0])):
             idx = indices[0][i]
             dist = distances[0][i]
             
@@ -86,8 +85,8 @@ class AdvancedRecommender:
             results.append({
                 "id": int(item['id']),
                 "name": item['name'],
-                "price": float(item['prices']),
-                "similarity_score": round(1 - dist, 4) # Convert distance to similarity
+                "price": float(item['price']),
+                "similarity_score": round(1 - dist, 4)
             })
             
         return results

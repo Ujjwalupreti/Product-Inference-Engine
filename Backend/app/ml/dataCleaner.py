@@ -1,42 +1,13 @@
 import pandas as pd
-import numpy as np
 import re
-import io
+import os
 from sklearn.base import BaseEstimator, TransformerMixin
 
-#Test Dataset for Training
-base_csv = """id,name,desp,prices,quantity,total
-1,Wireless Mouse,Ergonomic wireless mouse with USB receiver,799,120,95880
-2,Mechanical Keyboard,RGB backlit mechanical keyboard,3499,60,209940
-3,Bluetooth Headphones,Noise cancelling over-ear headphones,5999,45,269955
-4,Laptop Stand,Adjustable aluminum laptop stand,1299,80,103920
-5,USB-C Hub,6-in-1 USB-C hub with HDMI and USB ports,2499,50,124950
-6,Smart Watch,Fitness tracking smartwatch with heart rate monitor,6999,40,279960
-7,External Hard Drive,1TB portable external hard drive,4599,35,160965
-8,Gaming Chair,Ergonomic gaming chair with lumbar support,12999,20,259980
-9,Webcam,Full HD 1080p USB webcam,2999,70,209930
-10,Portable Speaker,Bluetooth portable speaker with deep bass,3999,55,219945"""
-
 def load_enhanced_dataset():
-    df = pd.read_csv(io.StringIO(base_csv))
-    new_rows = []
-    last_id = 10
-    variations = [("Pro", 1.5), ("Mini", 0.8), ("Budget", 0.5)]
-    
-    for _, row in df.iterrows():
-        for suffix, price_mult in variations:
-            last_id += 1
-            new_rows.append({
-                "id": last_id,
-                "name": f"{row['name']} {suffix}",
-                "desp": f"{suffix} version of {row['desp']}", # Simple augmentation
-                "prices": int(row['prices'] * price_mult),
-                "quantity": 50,
-                "total": 0
-            })
-            
-    df_extended = pd.concat([df, pd.DataFrame(new_rows)], ignore_index=True)
-    return df_extended
+    df = pd.read_csv("products.csv")
+    df['name'] = df['name'].fillna('')
+    df['desp'] = df['desp'].fillna('')
+    return df
 
 class TextCleaner(BaseEstimator, TransformerMixin):
     def fit(self, X, y=None):
